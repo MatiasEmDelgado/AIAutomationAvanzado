@@ -1,1 +1,316 @@
-
+{
+  "name": "checkpoint1_matias_delgado",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "241dfa7a-9441-4ca1-a1e2-be765f062987",
+      "name": "When chat message received",
+      "webhookId": "0f80809a-1c15-439a-9e06-4686b18965b6"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "# ROL Y ÁMBITO\n\nSos un Asistente de Triage de Leads del equipo comercial.\n\nTu único ámbito es la gestión de leads en la planilla \"Leads - Clase 1\".\n\nNO tenés autorización para modificar presupuestos, aplicar descuentos ni borrar registros existentes.\n\n# OBJETIVO\n\nConvertir los datos que llegan por chat en un registro limpio y sin duplicados para el equipo de ventas.\n\n# REGLAS DE USO DE HERRAMIENTAS\n\n1. Antes de registrar un lead, verificá SIEMPRE con \"buscar_lead\" si el email ya existe, para evitar duplicados.\n\n2. Si el lead ya existe, informalo y NO lo vuelvas a registrar.\n\n3. Si falta el email, pedíselo al usuario antes de usar cualquier herramienta.\n\n4. Después de completar cada tarea, enviá un resumen con \"log_observabilidad\" con el formato: \"Tarea completada: [detalle]\".\n\n# ESCALAMIENTO\n\nSi el usuario solicita una cotización personalizada, un descuento o un reembolso, detené tu ciclo de inmediato y respondé: \"Transfiriendo tu caso a revisión humana\".\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "73e9c0a3-9061-4fde-b6f9-a026c2edff33",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        208,
+        224
+      ],
+      "id": "bfa6fca3-faaf-4d79-b35b-7e9946e2b1e4",
+      "name": "Groq Chat Model",
+      "notesInFlow": false,
+      "credentials": {
+        "groqApi": {
+          "id": "4xUUBI5PKZcd1RvE",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        208
+      ],
+      "id": "08cb6f6b-4ba5-45a3-9de4-160fea8dd849",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Busca un lead en la planilla comercial \"Leads - Clase 1\" filtrando por la columna Email. Usá esta herramienta SIEMPRE antes de registrar un lead nuevo, para verificar si el email ya se encuentra registrado y evitar duplicados.\nTambién usala cuando el usuario pregunte si un contacto existe o pida datos de un lead. Devuelve la fila completa del lead (nombre, empresa, interés y fecha) o vacío si no existe.",
+        "documentId": {
+          "__rl": true,
+          "value": "115VIPAe7z1LOXy3piPlJBKFfpU33OvNmuh6hP4n4W3s",
+          "mode": "list",
+          "cachedResultName": "Leads - Clase 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/115VIPAe7z1LOXy3piPlJBKFfpU33OvNmuh6hP4n4W3s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/115VIPAe7z1LOXy3piPlJBKFfpU33OvNmuh6hP4n4W3s/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "{{$fromAI('email', 'Email exacto del lead a buscar en la plantilla', 'string')}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        176
+      ],
+      "id": "77be7064-8a1b-401b-b9a5-873f28242e96",
+      "name": "buscar_lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "X43cXIYaSjftCJ2p",
+          "name": "ApiGoogleSheetMatu"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Agrega una fila nueva en la planilla comercial \"Leads - Clase 1\". Usa esta herramienta UNICAMENTE después de haber verificado con buscar_lead que el email no existe. Requiere como minimo: Email y Nombre; completá Empresa e Interés si el usuario los mencionó, y Fecha con la fecha actual.",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "115VIPAe7z1LOXy3piPlJBKFfpU33OvNmuh6hP4n4W3s",
+          "mode": "list",
+          "cachedResultName": "Leads - Clase 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/115VIPAe7z1LOXy3piPlJBKFfpU33OvNmuh6hP4n4W3s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/115VIPAe7z1LOXy3piPlJBKFfpU33OvNmuh6hP4n4W3s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $fromAI('Email', 'Email exacto del lead a buscar en la plantilla', 'string') }}",
+            "Nombre": "={{$fromAI('Nombre', 'Nombre y apellido exacto del lead a buscar en la plantilla', 'string')}}",
+            "Empresa": "={{$fromAI('mpresa', 'Empresa del lead a buscar en la plantilla', 'string')}}",
+            "Interes": "={{$fromAI('Interes', 'Producto o interés del lead a buscar en la plantilla', 'string')}}",
+            "Fecha": "{{$now.format('yyyy-mm-dd')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interes",
+              "displayName": "Interes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        176
+      ],
+      "id": "18408f89-d1a7-4795-b75b-977657729725",
+      "name": "registrar_lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "X43cXIYaSjftCJ2p",
+          "name": "ApiGoogleSheetMatu"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Enviá por Gmail el reporte de auditoría al supervisor humano. Usa esta herramienta una única vez al final de cada tarea completada, con un cuerpo que resuma, qué pidió el usuario, qué herramientas usaste y cuál fue el resultado final.",
+        "sendTo": "matias.untref@gmail.com",
+        "subject": "Agente Matu - tarea completada",
+        "emailType": "text",
+        "message": "={{ $fromAI('resumen', `Resumen de la tarea completada: qué pidio el usuario, qué herramientas se usaron y el resultado final`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        176
+      ],
+      "id": "97253238-6cfb-4ef1-b77e-4af58aa866ff",
+      "name": "Send a message in Gmail",
+      "webhookId": "dc1e6382-74d3-4798-bd4d-3b5b82e5c6fe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iRY0slYv7kJDCCgb",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a0f2c03f-a83d-420d-9b9b-b60a5dcc7b57",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4856a8c4c0203ed3a22fad97010ebc7d397d561c5412f64218f835be4bac4f77"
+  },
+  "nodeGroups": [],
+  "id": "pWfDn4asF0bgw4Fi",
+  "tags": []
+}
